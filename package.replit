@@ -1,0 +1,3 @@
+run = "npm start"
+entrypoint = "index.js"
+onBoot = "chmod +x install-chrome-deps.sh && ./install-chrome-deps.sh"

@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Web Email Scraper Tool</title>
+        <link rel="stylesheet" href="style.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        />
+        <script src="theme-toggle.js"></script>
+    </head>
+
+    <body>
+        <header>
+            <h1>
+                <i class="fas fa-envelope-open-text"></i> Web Email Scraper Tool
+            </h1>
+            <button class="theme-toggle" title="Toggle dark mode">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-link"></i> Target URLs
+                    </h3>
+                </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="urls">Enter URLs (one per line):</label>
+                        <textarea
+                            id="urls"
+                            placeholder="https://example.com&#10;https://anothersite.com"
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-row">
+                <button id="startScraping" class="btn btn-primary">
+                    <i class="fas fa-play"></i> Start Scraping
+                </button>
+                <button id="stopScraping" class="btn btn-danger" disabled>
+                    <i class="fas fa-stop"></i> Stop Scraping
+                </button>
+            </div>
+
+            <div class="status" id="status"></div>
+
+            <div class="progress">
+                <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-cog"></i> Configuration
+                    </h3>
+                    <button class="btn btn-sm btn-secondary toggle-card">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="card-content">
+                    <div class="input-group">
+                        <label for="concurrency">Max Concurrency:</label>
+                        <input
+                            type="number"
+                            id="concurrency"
+                            value="5"
+                            min="1"
+                            max="10"
+                        />
+                    </div>
+
+                    <div class="input-group">
+                        <label for="depth">Max Crawl Depth:</label>
+                        <input
+                            type="number"
+                            id="depth"
+                            value="3"
+                            min="1"
+                            max="5"
+                        />
+                    </div>
+
+                    <div class="input-group">
+                        <label for="delay">Crawl Delay (ms):</label>
+                        <input
+                            type="number"
+                            id="delay"
+                            value="1500"
+                            min="500"
+                        />
+                    </div>
+
+                    <div class="input-group">
+                        <label for="timeout">Page Timeout (ms):</label>
+                        <input
+                            type="number"
+                            id="timeout"
+                            value="45000"
+                            min="10000"
+                        />
+                    </div>
+
+                    <div class="input-group">
+                        <label for="maxPages">Max Pages Per Domain:</label>
+                        <input type="number" id="maxPages" value="09" min="1" />
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="respectRobots" checked />
+                        <label for="respectRobots">Respect robots.txt</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="debug" />
+                        <label for="debug">Enable Debug Logging</label>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="useProxies" />
+                        <label for="useProxies">Use Proxies</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-network-wired"></i> Proxy Configuration
+                    </h3>
+                    <button class="btn btn-sm btn-secondary toggle-card">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="card-content">
+                    <div id="proxyConfig">
+                        <div class="proxy-item">
+                            <input
+                                type="text"
+                                placeholder="http://proxy-server:port"
+                                class="proxy-server"
+                            />
+                            <input
+                                type="text"
+                                placeholder="username"
+                                class="proxy-username"
+                            />
+                            <input
+                                type="text"
+                                placeholder="password"
+                                class="proxy-password"
+                            />
+                            <button class="remove-proxy">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="addProxy" class="btn btn-secondary">
+                        <i class="fas fa-plus"></i> Add Another Proxy
+                    </button>
+                </div>
+            </div>
+            <div class="progress">
+            <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-list"></i> Log</h3>
+                </div>
+                <div class="card-content">
+                    <pre id="log"></pre>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-table"></i> Results
+                    </h3>
+                </div>
+                <div class="card-content">
+                    <div id="results">
+                        <p>No results yet</p>
+                    </div>
+                    <button id="downloadCsv" class="btn btn-primary" disabled>
+                        <i class="fas fa-download"></i> Download Results (CSV)
+                    </button>
+                </div>
+            </div>
+        </div>
+        <footer class="interactive-footer">
+            <div class="footer-wave"></div>
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>About Me</h3>
+                    <div class="author-card">
+                        <div class="author-image">
+                            <!-- Replace with actual image -->
+                            <img src="rafi_abrer.png" alt="Rafi Abrer" />
+                        </div>
+                        <div class="author-info">
+                            <h4>Rafi Abrer</h4>
+                            <p>Professional Designer & Developer</p>
+                        </div>
+                    </div>
+                    <p>
+                        Passionate about creating beautiful and functional
+                        experiences that make a difference.
+                    </p>
+                    <div class="social-links">
+                        <a
+                            href="https://facebook.com/rafi.0911"
+                            class="social-link"
+                            aria-label="Facebook"
+                        >
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-link" aria-label="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-column">
+                    <h3>Contact</h3>
+                    <div class="contact-info">
+                        <p>
+                            <i class="fas fa-envelope"></i>
+                            rafiabrar39@gmail.com
+                        </p>
+                        <p><i class="fas fa-phone"></i> +880 1845-289319</p>
+                        <p>
+                            <i class="fas fa-map-marker-alt"></i> Bogra,
+                            Rajhshahi, BD
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Font Awesome for icons (you would need to include this) -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+        <script>
+            // DOM elements
+            const urlsTextarea = document.getElementById("urls");
+            const concurrencyInput = document.getElementById("concurrency");
+            const depthInput = document.getElementById("depth");
+            const delayInput = document.getElementById("delay");
+            const timeoutInput = document.getElementById("timeout");
+            const maxPagesInput = document.getElementById("maxPages");
+            const respectRobotsCheckbox =
+                document.getElementById("respectRobots");
+            const debugCheckbox = document.getElementById("debug");
+            const useProxiesCheckbox = document.getElementById("useProxies");
+            const proxyConfigDiv = document.getElementById("proxyConfig");
+            const addProxyButton = document.getElementById("addProxy");
+            const startButton = document.getElementById("startScraping");
+            const stopButton = document.getElementById("stopScraping");
+            const statusDiv = document.getElementById("status");
+            const progressBar = document.getElementById("progressBar");
+            const logPre = document.getElementById("log");
+            const resultsDiv = document.getElementById("results");
+            const downloadCsvButton = document.getElementById("downloadCsv");
+
+            // State variables
+            let scraping = false;
+            let extractedEmails = new Set();
+            let processedUrls = new Set();
+            let csvData = [];
+            let worker = null;
+            let currentJobId = null;
+            let statusPollInterval = null;
+
+            // Event listeners
+            addProxyButton.addEventListener("click", addProxyField);
+            startButton.addEventListener("click", startScraping);
+            stopButton.addEventListener("click", stopScraping);
+            downloadCsvButton.addEventListener("click", downloadCsv);
+
+            // Initialize
+            function init() {
+                // Add initial proxy field
+                addProxyField();
+
+                // Load configuration from localStorage if available
+                loadConfig();
+            }
+
+            function addProxyField() {
+                const proxyItem = document.createElement("div");
+                proxyItem.className = "proxy-item";
+                proxyItem.innerHTML = `
+                <input type="text" placeholder="http://proxy-server:port" class="proxy-server">
+                <input type="text" placeholder="username" class="proxy-username">
+                <input type="text" placeholder="password" class="proxy-password">
+                <button class="remove-proxy">Remove</button>
+            `;
+                proxyConfigDiv.appendChild(proxyItem);
+
+                // Add event listener to the remove button
+                proxyItem
+                    .querySelector(".remove-proxy")
+                    .addEventListener("click", function () {
+                        proxyConfigDiv.removeChild(proxyItem);
+                    });
+            }
+
+            function loadConfig() {
+                const savedConfig = localStorage.getItem("emailScraperConfig");
+                if (savedConfig) {
+                    try {
+                        const config = JSON.parse(savedConfig);
+                        concurrencyInput.value = config.maxConcurrency || 5;
+                        depthInput.value = config.maxDepth || 3;
+                        delayInput.value = config.crawlDelay || 1500;
+                        timeoutInput.value = config.pageTimeout || 45000;
+                        maxPagesInput.value = config.maxPagesPerDomain || 50;
+                        respectRobotsCheckbox.checked =
+                            config.respectRobotsTxt !== false;
+                        debugCheckbox.checked = config.debug || false;
+                        useProxiesCheckbox.checked = config.useProxies || false;
+
+                        // Load proxies if available
+                        if (config.proxies && config.proxies.length > 0) {
+                            // Clear default proxy fields
+                            proxyConfigDiv.innerHTML = "";
+
+                            // Add saved proxies
+                            config.proxies.forEach((proxy) => {
+                                const proxyItem = document.createElement("div");
+                                proxyItem.className = "proxy-item";
+                                proxyItem.innerHTML = `
+                                <input type="text" value="${proxy.server || ""}" placeholder="http://proxy-server:port" class="proxy-server">
+                                <input type="text" value="${proxy.username || ""}" placeholder="username" class="proxy-username">
+                                <input type="text" value="${proxy.password || ""}" placeholder="password" class="proxy-password">
+                                <button class="remove-proxy">Remove</button>
+                            `;
+                                proxyConfigDiv.appendChild(proxyItem);
+
+                                // Add event listener to the remove button
+                                proxyItem
+                                    .querySelector(".remove-proxy")
+                                    .addEventListener("click", function () {
+                                        proxyConfigDiv.removeChild(proxyItem);
+                                    });
+                            });
+                        }
+                    } catch (error) {
+                        console.error(
+                            "Error loading saved configuration:",
+                            error,
+                        );
+                    }
+                }
+            }
+
+            function saveConfig(config) {
+                localStorage.setItem(
+                    "emailScraperConfig",
+                    JSON.stringify(config),
+                );
+            }
+
+            function getConfig() {
+                // Get proxies
+                const proxyItems =
+                    proxyConfigDiv.querySelectorAll(".proxy-item");
+                const proxies = [];
+
+                proxyItems.forEach((item) => {
+                    const server = item.querySelector(".proxy-server").value;
+                    const username =
+                        item.querySelector(".proxy-username").value;
+                    const password =
+                        item.querySelector(".proxy-password").value;
+
+                    if (server) {
+                        proxies.push({
+                            server,
+                            username,
+                            password,
+                        });
+                    }
+                });
+
+                const config = {
+                    maxConcurrency: parseInt(concurrencyInput.value, 10),
+                    maxDepth: parseInt(depthInput.value, 10),
+                    crawlDelay: parseInt(delayInput.value, 10),
+                    pageTimeout: parseInt(timeoutInput.value, 10),
+                    maxPagesPerDomain: parseInt(maxPagesInput.value, 10),
+                    respectRobotsTxt: respectRobotsCheckbox.checked,
+                    debug: debugCheckbox.checked,
+                    useProxies:
+                        useProxiesCheckbox.checked && proxies.length > 0,
+                    proxies: proxies,
+                };
+
+                // Save configuration
+                saveConfig(config);
+
+                return config;
+            }
+
+            function startScraping() {
+                if (scraping) return;
+
+                // Get URLs
+                const urls = urlsTextarea.value
+                    .trim()
+                    .split("\n")
+                    .map((url) => url.trim())
+                    .filter((url) => url && !url.startsWith("#"))
+                    .map((url) => {
+                        // Add protocol if missing
+                        if (
+                            !url.startsWith("http://") &&
+                            !url.startsWith("https://")
+                        ) {
+                            return `https://${url}`;
+                        }
+                        return url;
+                    });
+
+                if (urls.length === 0) {
+                    updateStatus("No valid URLs provided", "error");
+                    return;
+                }
+
+                // Reset state
+                scraping = true;
+                extractedEmails = new Set();
+                processedUrls = new Set();
+                csvData = [];
+                logPre.textContent = "";
+                resultsDiv.innerHTML = "<p>Scraping in progress...</p>";
+                downloadCsvButton.disabled = true;
+
+                // Update UI
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                updateStatus(
+                    `Starting to scrape ${urls.length} URLs...`,
+                    "info",
+                );
+                updateProgress(0);
+
+                // Get configuration
+                const config = getConfig();
+
+                // Send request to backend
+                fetch("/api/scrape/start", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ urls, config }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.error) {
+                            updateStatus(`Error: ${data.error}`, "error");
+                            scraping = false;
+                            startButton.disabled = false;
+                            return;
+                        }
+
+                        // Store job ID
+                        currentJobId = data.jobId;
+
+                        // Start polling for status
+                        statusPollInterval = setInterval(pollJobStatus, 2000);
+                    })
+                    .catch((error) => {
+                        updateStatus(`Error: ${error.message}`, "error");
+                        scraping = false;
+                        startButton.disabled = false;
+                        stopButton.disabled = true;
+                    });
+            }
+
+            function stopScraping() {
+                if (!scraping || !currentJobId) return;
+
+                fetch(`/api/scrape/stop/${currentJobId}`, {
+                    method: "POST",
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.error) {
+                            updateStatus(`Error: ${data.error}`, "error");
+                            return;
+                        }
+
+                        updateStatus("Stopping scraper...", "warn");
+                    })
+                    .catch((error) => {
+                        updateStatus(`Error: ${error.message}`, "error");
+                    });
+            }
+
+            function pollJobStatus() {
+                if (!scraping || !currentJobId) {
+                    clearInterval(statusPollInterval);
+                    return;
+                }
+
+                fetch(`/api/scrape/status/${currentJobId}`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.error) {
+                            updateStatus(`Error: ${data.error}`, "error");
+                            return;
+                        }
+
+                        // Update progress
+                        updateProgress(data.progress);
+
+                        // Update logs
+                        data.logs.forEach((logItem) => {
+                            log(logItem.level, logItem.message);
+                        });
+
+                        // Store data
+                        data.emails.forEach((email) => {
+                            extractedEmails.add(email);
+                        });
+                        csvData = data.csvData;
+
+                        // Update process count
+                        processedUrls = new Set();
+                        for (let i = 0; i < data.processedUrls; i++) {
+                            processedUrls.add(i);
+                        }
+
+                        // Check if complete
+                        if (data.progress >= 100 || data.stopped) {
+                            finishScraping();
+                        }
+                    })
+                    .catch((error) => {
+                        log("ERROR", `Error polling status: ${error.message}`);
+                    });
+            }
+
+            function simulateScraping(urls, config) {
+                log("INFO", `Starting email scraper with ${urls.length} URLs`);
+                log("INFO", `Max concurrency: ${config.maxConcurrency}`);
+                log("INFO", `Max depth: ${config.maxDepth}`);
+                log("INFO", `Respect robots.txt: ${config.respectRobotsTxt}`);
+
+                let completedUrls = 0;
+
+                // Process URLs in batches
+                const processNextBatch = (index) => {
+                    if (!scraping || index >= urls.length) {
+                        finishScraping();
+                        return;
+                    }
+
+                    const batchSize = Math.min(
+                        config.maxConcurrency,
+                        urls.length - index,
+                    );
+                    const batchUrls = urls.slice(index, index + batchSize);
+
+                    log("INFO", `Processing batch of ${batchUrls.length} URLs`);
+
+                    // Process each URL in the batch
+                    const batchPromises = batchUrls.map((url) => {
+                        return new Promise((resolve) => {
+                            simulateCrawlUrl(url, config).then((emails) => {
+                                completedUrls++;
+                                updateProgress(
+                                    Math.floor(
+                                        (completedUrls / urls.length) * 100,
+                                    ),
+                                );
+                                resolve(emails);
+                            });
+                        });
+                    });
+
+                    // Wait for all URLs in this batch to complete
+                    Promise.all(batchPromises).then((emailResults) => {
+                        // Collect emails from this batch
+                        emailResults.forEach((emails) => {
+                            emails.forEach((email) => {
+                                if (!extractedEmails.has(email.email)) {
+                                    extractedEmails.add(email.email);
+                                    csvData.push(email);
+                                }
+                            });
+                        });
+
+                        // Process next batch
+                        setTimeout(() => {
+                            processNextBatch(index + batchSize);
+                        }, 1000);
+                    });
+                };
+
+                // Start processing batches
+                processNextBatch(0);
+            }
+
+            function simulateCrawlUrl(url, config, depth = 0) {
+                return new Promise((resolve) => {
+                    if (
+                        depth > config.maxDepth ||
+                        processedUrls.has(url) ||
+                        !scraping
+                    ) {
+                        resolve([]);
+                        return;
+                    }
+
+                    processedUrls.add(url);
+                    log("INFO", `Crawling (depth ${depth}): ${url}`);
+
+                    // Simulate page loading delay
+                    setTimeout(
+                        () => {
+                            // Simulate random number of emails found
+                            const emailCount = Math.floor(Math.random() * 5);
+                            const foundEmails = [];
+
+                            for (let i = 0; i < emailCount; i++) {
+                                const emailDomain = [
+                                    "example.com",
+                                    "test.org",
+                                    "domain.net",
+                                    "company.co",
+                                ][Math.floor(Math.random() * 4)];
+                                const emailName = [
+                                    "info",
+                                    "contact",
+                                    "support",
+                                    "admin",
+                                    "sales",
+                                    "help",
+                                ][Math.floor(Math.random() * 6)];
+                                const emailAddress = `${emailName}@${emailDomain}`;
+
+                                if (!extractedEmails.has(emailAddress)) {
+                                    log(
+                                        "INFO",
+                                        `Found email: ${emailAddress} from ${url}`,
+                                    );
+
+                                    foundEmails.push({
+                                        email: emailAddress,
+                                        domain: emailDomain,
+                                        source: url,
+                                        sourceDomain: new URL(url).hostname,
+                                        timestamp: new Date().toISOString(),
+                                        pageTitle: `Page from ${url}`,
+                                        contextText:
+                                            "Simulated context for email",
+                                    });
+                                }
+                            }
+
+                            // If not at max depth, simulate finding internal links
+                            if (depth < config.maxDepth && scraping) {
+                                // Simulate 1-3 internal links
+                                const linkCount =
+                                    Math.floor(Math.random() * 3) + 1;
+                                const promises = [];
+
+                                for (let i = 0; i < linkCount; i++) {
+                                    // Generate a random internal link
+                                    const baseUrl = new URL(url);
+                                    const path = [
+                                        "about",
+                                        "contact",
+                                        "team",
+                                        "services",
+                                        "products",
+                                    ][Math.floor(Math.random() * 5)];
+                                    const internalUrl = `${baseUrl.protocol}//${baseUrl.host}/${path}`;
+
+                                    if (!processedUrls.has(internalUrl)) {
+                                        // Recursive crawl with delay
+                                        promises.push(
+                                            new Promise((innerResolve) => {
+                                                setTimeout(() => {
+                                                    simulateCrawlUrl(
+                                                        internalUrl,
+                                                        config,
+                                                        depth + 1,
+                                                    ).then(innerResolve);
+                                                }, config.crawlDelay);
+                                            }),
+                                        );
+                                    }
+                                }
+
+                                Promise.all(promises).then((nestedResults) => {
+                                    const nestedEmails = nestedResults.flat();
+                                    resolve([...foundEmails, ...nestedEmails]);
+                                });
+                            } else {
+                                resolve(foundEmails);
+                            }
+                        },
+                        Math.random() * 1000 + 500,
+                    ); // Random delay between 500-1500ms
+                });
+            }
+
+            function finishScraping() {
+                scraping = false;
+                startButton.disabled = false;
+                stopButton.disabled = true;
+
+                if (statusPollInterval) {
+                    clearInterval(statusPollInterval);
+                    statusPollInterval = null;
+                }
+
+                updateStatus(
+                    `Scraping completed. Found ${extractedEmails.size} unique emails.`,
+                    "success",
+                );
+                updateProgress(100);
+
+                // Display results
+                displayResults();
+
+                // Enable download button
+                downloadCsvButton.disabled = false;
+
+                log(
+                    "INFO",
+                    `Crawling complete. Found ${extractedEmails.size} unique emails.`,
+                );
+            }
+
+            function displayResults() {
+                if (csvData.length === 0) {
+                    resultsDiv.innerHTML = "<p>No emails found</p>";
+                    return;
+                }
+
+                // Group emails by domain
+                const emailsByDomain = {};
+                csvData.forEach((item) => {
+                    if (!emailsByDomain[item.domain]) {
+                        emailsByDomain[item.domain] = [];
+                    }
+                    emailsByDomain[item.domain].push(item);
+                });
+
+                // Create results HTML
+                let resultsHtml = `<p>Found ${extractedEmails.size} unique email(s)</p>`;
+
+                // Add table of emails
+                resultsHtml +=
+                    '<table border="1" cellpadding="5" cellspacing="0">';
+                resultsHtml +=
+                    "<tr><th>Email</th><th>Domain</th><th>Source URL</th></tr>";
+
+                // Sort domains alphabetically
+                const sortedDomains = Object.keys(emailsByDomain).sort();
+
+                sortedDomains.forEach((domain) => {
+                    const emails = emailsByDomain[domain];
+
+                    emails.forEach((item) => {
+                        resultsHtml += `<tr>
+                        <td>${item.email}</td>
+                        <td>${item.domain}</td>
+                        <td>${item.source}</td>
+                    </tr>`;
+                    });
+                });
+
+                resultsHtml += "</table>";
+
+                resultsDiv.innerHTML = resultsHtml;
+            }
+
+            function downloadCsv() {
+                if (!currentJobId) return;
+
+                // Create download link to server endpoint
+                const link = document.createElement("a");
+                link.setAttribute(
+                    "href",
+                    `/api/scrape/download/${currentJobId}`,
+                );
+                link.setAttribute("download", "extracted_emails.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            function updateStatus(message, type = "info") {
+                statusDiv.textContent = message;
+                statusDiv.className = "status " + type;
+            }
+
+            function updateProgress(percent) {
+                progressBar.style.width = percent + "%";
+                progressBar.textContent = percent + "%";
+            }
+
+            function log(level, message) {
+                const timestamp = new Date().toISOString();
+
+                // Only show debug messages if debug mode is enabled
+                if (level === "DEBUG" && !debugCheckbox.checked) {
+                    return;
+                }
+
+                const logLine = document.createElement("div");
+                logLine.className = `log-${level}`;
+                logLine.textContent = `[${timestamp}] [${level}] ${message}`;
+
+                logPre.appendChild(logLine);
+                logPre.scrollTop = logPre.scrollHeight; // Auto-scroll to bottom
+            }
+
+            // Initialize
+            init();
+
+            // Make sure to add functionality for the new toggle-card buttons:
+            document.addEventListener("DOMContentLoaded", function () {
+                const toggleButtons = document.querySelectorAll(".toggle-card");
+                toggleButtons.forEach((button) => {
+                    button.addEventListener("click", function () {
+                        const content =
+                            this.closest(".card").querySelector(
+                                ".card-content",
+                            );
+                        content.style.display =
+                            content.style.display === "none" ? "block" : "none";
+                        this.innerHTML =
+                            content.style.display === "none"
+                                ? '<i class="fas fa-chevron-down"></i>'
+                                : '<i class="fas fa-chevron-up"></i>';
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,20 @@
+[2025-04-21T08:47:46.300Z] Processing batch of 3 URLs
+[2025-04-21T08:47:47.467Z] Crawling (depth 0): http://www.currysales.com
+[2025-04-21T08:47:47.469Z] Crawling (depth 0): http://www.apcoop.com
+[2025-04-21T08:47:47.470Z] Crawling (depth 0): http://www.ujchevy.com
+[2025-04-21T08:47:58.462Z] Crawling (depth 1): https://www.currysales.com/
+[2025-04-21T08:48:06.673Z] Crawling (depth 2): https://www.currysales.com/about-curry-sales/
+[2025-04-21T08:48:09.049Z] Crawling (depth 1): https://www.ujchevy.com/#skip-to-main
+[2025-04-21T08:48:10.072Z] Crawling (depth 2): https://www.currysales.com/services/
+[2025-04-21T08:48:13.226Z] Crawling (depth 2): https://www.currysales.com/categories/
+[2025-04-21T08:48:13.337Z] Crawling (depth 1): https://www.ujchevy.com/#actionbar
+[2025-04-21T08:48:15.918Z] Crawling (depth 2): https://www.currysales.com/testimonials/
+[2025-04-21T08:48:17.573Z] Crawling (depth 1): https://www.ujchevy.com/
+[2025-04-21T08:48:17.710Z] Error crawling http://www.apcoop.com: Navigation timeout of 30000 ms exceeded
+[2025-04-21T08:48:18.204Z] Crawling (depth 2): https://www.currysales.com/news/
+[2025-04-21T08:48:24.318Z] Processing batch of 2 URLs
+[2025-04-21T08:48:25.116Z] Crawling (depth 0): http://www.showgrow.com
+[2025-04-21T08:48:25.118Z] Crawling (depth 0): http://www.thebeachchevrolet.com
+[2025-04-21T08:48:28.616Z] Error crawling http://www.showgrow.com: net::ERR_BLOCKED_BY_CLIENT at http://www.showgrow.com
+[2025-04-21T08:48:33.214Z] Saved 0 emails to extracted_emails.csv
+[2025-04-21T08:48:33.214Z] Crawling completed. Found 0 unique emails.
