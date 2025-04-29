@@ -1,11 +1,7 @@
 // email-scraper-server.js
 const express = require("express");
 // Replaced
-const puppeteer = require('puppeteer');
-const browser = await puppeteer.launch({
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
-});
+const puppeteer = require("puppeteer-core");
 const cors = require("cors");
 const { URL } = require("url");
 const robotsParser = require("robots-parser");
@@ -37,8 +33,8 @@ const API_BASE_URL = ""; // Empty string for same-origin, or specify full URL if
 // }
 
 // Then call it
-startBrowser().then(browser => {
-  console.log('Browser launched successfully');
+startBrowser().then((browser) => {
+  console.log("Browser launched successfully");
 });
 
 // Middleware
@@ -47,7 +43,7 @@ app.use(
     origin: "*",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
-  }),
+  })
 );
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -220,7 +216,7 @@ async function crawlUrl(
   config,
   depth = 0,
   domainStats = {},
-  jobId,
+  jobId
 ) {
   const job = activeJobs.get(jobId);
   if (!job || job.stopped) return [];
@@ -279,7 +275,7 @@ async function crawlUrl(
     "/privacy",
   ].some(
     (contactPath) =>
-      path.includes(contactPath) || path.endsWith(contactPath + ".html"),
+      path.includes(contactPath) || path.endsWith(contactPath + ".html")
   );
 
   if (isPriorityPage) {
@@ -300,7 +296,7 @@ async function crawlUrl(
 
     // Configure browser settings
     await page.setUserAgent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"
     );
 
     // Security and privacy settings
@@ -368,7 +364,7 @@ async function crawlUrl(
     // Extract emails using both text and HTML methods for better coverage
     const pageText = await page.evaluate(() => document.body.innerText);
     const pageHtml = await page.evaluate(
-      () => document.documentElement.outerHTML,
+      () => document.documentElement.outerHTML
     );
 
     // Extract emails from both sources
@@ -404,7 +400,7 @@ async function crawlUrl(
           const start = Math.max(0, index - 100);
           const end = Math.min(
             bodyText.length,
-            index + emailToFind.length + 100,
+            index + emailToFind.length + 100
           );
           return bodyText.substring(start, end).replace(/\n+/g, " ").trim();
         }, email);
@@ -499,7 +495,7 @@ async function crawlUrl(
         config,
         depth + 1,
         domainStats,
-        jobId,
+        jobId
       );
       nestedEmails.push(...linkEmails);
 
@@ -594,8 +590,14 @@ app.post("/api/scrape/start", async (req, res) => {
       job.log("INFO", `Max depth: ${sanitizedConfig.maxDepth}`);
       job.log(
         "INFO",
-        `Respect robots.txt: ${sanitizedConfig.respectRobotsTxt}`,
+        `Respect robots.txt: ${sanitizedConfig.respectRobotsTxt}`
       );
+
+      // Later in your code:
+      const browser = await puppeteer.launch({
+        executablePath: process.env.CHROME_PATH || "/usr/bin/chromium-browser",
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
 
       // Launch browser with improved security settings
       // const browser = await puppeteer.launch({
@@ -631,8 +633,8 @@ app.post("/api/scrape/start", async (req, res) => {
         // Process each URL in the batch concurrently
         await Promise.all(
           batch.map((url) =>
-            crawlUrl(browser, url, sanitizedConfig, 0, domainStats, jobId),
-          ),
+            crawlUrl(browser, url, sanitizedConfig, 0, domainStats, jobId)
+          )
         );
 
         // Update progress
@@ -644,7 +646,7 @@ app.post("/api/scrape/start", async (req, res) => {
         if (!job.notFoundUrls.has(url) && job.processedUrls.has(url)) {
           // Check if any emails were found for this URL
           const foundEmailsForUrl = job.csvData.some(
-            (item) => item.source === url,
+            (item) => item.source === url
           );
 
           if (!foundEmailsForUrl) {
@@ -676,7 +678,7 @@ app.post("/api/scrape/start", async (req, res) => {
       job.progress = 100;
       job.log(
         "INFO",
-        `Website crawling completed. Found ${job.extractedEmails.size} email addresses across ${job.processedUrls.size} URLs.`,
+        `Website crawling completed. Found ${job.extractedEmails.size} email addresses across ${job.processedUrls.size} URLs.`
       );
 
       // Close browser
@@ -815,7 +817,7 @@ app.get("/api/scrape/download/:jobId", (req, res) => {
     res.setHeader("Content-Type", "text/csv");
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=extracted_emails.csv",
+      "attachment; filename=extracted_emails.csv"
     );
     res.send(csvContent);
   } catch (error) {
@@ -878,5 +880,5 @@ app.get("/ping", (req, res) => {
 });
 
 app.listen(5000, () => {
-    console.log('Server is running on http://0.0.0.0:5000');
+  console.log("Server is running on http://0.0.0.0:5000");
 });
