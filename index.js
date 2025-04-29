@@ -8,10 +8,8 @@ import path from "path";
 import fetch from "node-fetch";
 import fs from "fs";
 
-
 const app = express();
 const PORT = 5000;
-
 
 // API Configuration
 const API_BASE_URL = ""; // Empty string for same-origin, or specify full URL if needed
@@ -22,10 +20,10 @@ async function startBrowser() {
   // Default Chrome locations for different environments
   const possibleChromePaths = [
     // Render.com
-    '/usr/bin/google-chrome',
-    '/usr/bin/chromium',
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium",
     // Replit
-    '/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium',
+    "/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium",
     // Default fallback
     process.env.CHROME_PATH,
   ];
@@ -42,16 +40,16 @@ async function startBrowser() {
 
   const launchOptions = {
     args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process',
-      '--disable-gpu'
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process",
+      "--disable-gpu",
     ],
-    headless: true
+    headless: true,
   };
 
   // Add executablePath if found
@@ -65,7 +63,7 @@ async function startBrowser() {
     return browser;
   } catch (error) {
     console.error("Error launching browser:", error.message);
-    
+
     // Try launching without executablePath as a fallback
     if (executablePath) {
       console.log("Retrying browser launch without specific executablePath");
@@ -79,7 +77,6 @@ async function startBrowser() {
 
 // Also replace the browser launch in your scrape endpoint with:
 const browser = await startBrowser();
-
 
 // Middleware
 app.use(
@@ -252,6 +249,73 @@ async function respectDomainRateLimit(domain, crawlDelay) {
   // Update last access time
   domainLastAccess.set(domain, Date.now());
 }
+
+// Create a browser pool manager
+const browserPool = {
+  browsers: [],
+  maxSize: 3,
+  
+  async getBrowser() {
+    if (this.browsers.length < this.maxSize) {
+      const browser = await startBrowser();
+      this.browsers.push(browser);
+      return browser;
+    }
+    return this.browsers[Math.floor(Math.random() * this.browsers.length)];
+  },
+  
+  async cleanup() {
+    for (const browser of this.browsers) {
+      await browser.close();
+    }
+    this.browsers = [];
+  }
+};
+
+// Add proper URL validation
+function isValidUrl(url) {
+  try {
+    const parsedUrl = new URL(url);
+    return ['http:', 'https:'].includes(parsedUrl.protocol);
+  } catch (e) {
+    return false;
+  }
+}
+
+// Add API rate limiting middleware
+const rateLimit = require('express-rate-limit');
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later'
+});
+
+app.use('/api/', apiLimiter);
+
+// Add global concurrency control
+const maxGlobalConcurrency = 10;
+let activePageCount = 0;
+
+async function getPage(browser) {
+  // Wait if too many pages open
+  while (activePageCount >= maxGlobalConcurrency) {
+    await new Promise(r => setTimeout(r, 500));
+  }
+  
+  activePageCount++;
+  const page = await browser.newPage();
+  
+  // Cleanup tracking when page closes
+  const originalClose = page.close.bind(page);
+  page.close = async () => {
+    activePageCount--;
+    return originalClose();
+  };
+  
+  return page;
+}
+
+
 
 // Function to crawl a URL using Puppeteer
 async function crawlUrl(
@@ -616,8 +680,8 @@ app.post("/api/scrape/start", async (req, res) => {
       updateProgress() {
         // Calculate progress based on processed URLs
         const processed = this.processedUrls.size;
-        const total = this.urls.length * 3; // Rough estimate
-        this.progress = Math.min(99, Math.floor((processed / total) * 100));
+        const total = job.urls.length;
+        this.progress = Math.floor((this.processedUrls.size / total) * 100);
       },
     };
 
@@ -646,7 +710,8 @@ app.post("/api/scrape/start", async (req, res) => {
       // Launch browser with improved security settings
       const browser = await puppeteer.launch({
         headless: "new",
-        executablePath: "/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium",
+        executablePath:
+          "/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium",
         args: [
           "--no-sandbox",
           "--disable-setuid-sandbox",
