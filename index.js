@@ -13,24 +13,24 @@ const PORT = 5000;
 // API Configuration
 const API_BASE_URL = ""; // Empty string for same-origin, or specify full URL if needed
 
-// Example of proper structure
-async function startBrowser() {
-  const browser = await puppeteer.launch({
-    executablePath: "/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium",
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--single-process",
-      "--disable-gpu"
-    ],
-    headless: true
-  });
-  return browser;
-}
+// // Example of proper structure
+// async function startBrowser() {
+//   const browser = await puppeteer.launch({
+//     executablePath: "/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium",
+//     args: [
+//       "--no-sandbox",
+//       "--disable-setuid-sandbox",
+//       "--disable-dev-shm-usage",
+//       "--disable-accelerated-2d-canvas",
+//       "--no-first-run",
+//       "--no-zygote",
+//       "--single-process",
+//       "--disable-gpu"
+//     ],
+//     headless: true
+//   });
+//   return browser;
+// }
 
 // Then call it
 startBrowser().then(browser => {

@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: email-scraper
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+    buildFilter:
+      paths:
+        - package.json
+    preDeployCommand: apt-get update && apt-get install -y chromium
