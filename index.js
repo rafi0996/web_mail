@@ -13,29 +13,70 @@ const PORT = 5000;
 // API Configuration
 const API_BASE_URL = ""; // Empty string for same-origin, or specify full URL if needed
 
-// // Example of proper structure
+// Replace your current startBrowser and browser launch functions with this:
+
 async function startBrowser() {
-  const browser = await puppeteer.launch({
-    executablePath: "/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium",
+  // Default Chrome locations for different environments
+  const possibleChromePaths = [
+    // Render.com
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium',
+    // Replit
+    '/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium',
+    // Default fallback
+    process.env.CHROME_PATH,
+  ];
+
+  // Find first existing Chrome executable
+  let executablePath = null;
+  for (const path of possibleChromePaths) {
+    if (path && require('fs').existsSync(path)) {
+      executablePath = path;
+      console.log(`Found Chrome at: ${executablePath}`);
+      break;
+    }
+  }
+
+  const launchOptions = {
     args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--single-process",
-      "--disable-gpu"
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',
+      '--disable-gpu'
     ],
     headless: true
-  });
-  return browser;
+  };
+
+  // Add executablePath if found
+  if (executablePath) {
+    launchOptions.executablePath = executablePath;
+  }
+
+  try {
+    const browser = await puppeteer.launch(launchOptions);
+    console.log("Browser launched successfully");
+    return browser;
+  } catch (error) {
+    console.error("Error launching browser:", error.message);
+    
+    // Try launching without executablePath as a fallback
+    if (executablePath) {
+      console.log("Retrying browser launch without specific executablePath");
+      delete launchOptions.executablePath;
+      return puppeteer.launch(launchOptions);
+    } else {
+      throw error;
+    }
+  }
 }
 
-// Then call it
-startBrowser().then((browser) => {
-  console.log("Browser launched successfully");
-});
+// Also replace the browser launch in your scrape endpoint with:
+const browser = await startBrowser();
+
 
 // Middleware
 app.use(
@@ -594,31 +635,31 @@ app.post("/api/scrape/start", async (req, res) => {
       );
 
       // Later in your code:
-      const browser = await puppeteer.launch({
-        executablePath: process.env.CHROME_PATH || "/usr/bin/chromium-browser",
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      });
+      // const browser = await puppeteer.launch({
+      //   executablePath: process.env.CHROME_PATH || "/usr/bin/chromium-browser",
+      //   args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      // });
 
       // Launch browser with improved security settings
-      // const browser = await puppeteer.launch({
-      //   headless: "new",
-      //   executablePath: "/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium",
-      //   args: [
-      //     "--no-sandbox",
-      //     "--disable-setuid-sandbox",
-      //     "--disable-dev-shm-usage",
-      //     "--disable-gpu",
-      //     "--disable-accelerated-2d-canvas",
-      //     "--disable-web-security",
-      //     "--window-size=1280,1024",
-      //     "--disable-extensions",
-      //     "--disable-component-extensions-with-background-pages",
-      //     "--disable-default-apps",
-      //     "--mute-audio",
-      //     "--no-zygote",
-      //   ],
-      //   ignoreHTTPSErrors: true,
-      // });
+      const browser = await puppeteer.launch({
+        headless: "new",
+        executablePath: "/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium",
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+          "--disable-accelerated-2d-canvas",
+          "--disable-web-security",
+          "--window-size=1280,1024",
+          "--disable-extensions",
+          "--disable-component-extensions-with-background-pages",
+          "--disable-default-apps",
+          "--mute-audio",
+          "--no-zygote",
+        ],
+        ignoreHTTPSErrors: true,
+      });
 
       // Process URLs in batches
       const batchSize = sanitizedConfig.maxConcurrency;

@@ -3,11 +3,20 @@ services:
     name: email-scraper
     env: node
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node index.js
     envVars:
       - key: NODE_VERSION
         value: 18
+    # This is important - we need to install Chrome in the build phase
     buildFilter:
       paths:
         - package.json
-    preDeployCommand: apt-get update && apt-get install -y chromium
+      ignoredPaths:
+        - node_modules
+    # Set up the environment for Chrome
+    plan: standard # Use at least standard tier for enough resources
+    healthCheckPath: /ping
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1 # Add some disk space
