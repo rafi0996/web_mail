@@ -2,6 +2,10 @@
 const express = require("express");
 // Replaced
 const puppeteer = require('puppeteer');
+const browser = await puppeteer.launch({
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
+  args: ['--no-sandbox', '--disable-setuid-sandbox']
+});
 const cors = require("cors");
 const { URL } = require("url");
 const robotsParser = require("robots-parser");
@@ -594,25 +598,25 @@ app.post("/api/scrape/start", async (req, res) => {
       );
 
       // Launch browser with improved security settings
-      const browser = await puppeteer.launch({
-        headless: "new",
-        executablePath: "/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium",
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-gpu",
-          "--disable-accelerated-2d-canvas",
-          "--disable-web-security",
-          "--window-size=1280,1024",
-          "--disable-extensions",
-          "--disable-component-extensions-with-background-pages",
-          "--disable-default-apps",
-          "--mute-audio",
-          "--no-zygote",
-        ],
-        ignoreHTTPSErrors: true,
-      });
+      // const browser = await puppeteer.launch({
+      //   headless: "new",
+      //   executablePath: "/nix/store/x205pbkd5xh5g4iv0g58xjla55has3cx-chromium-108.0.5359.94/bin/chromium",
+      //   args: [
+      //     "--no-sandbox",
+      //     "--disable-setuid-sandbox",
+      //     "--disable-dev-shm-usage",
+      //     "--disable-gpu",
+      //     "--disable-accelerated-2d-canvas",
+      //     "--disable-web-security",
+      //     "--window-size=1280,1024",
+      //     "--disable-extensions",
+      //     "--disable-component-extensions-with-background-pages",
+      //     "--disable-default-apps",
+      //     "--mute-audio",
+      //     "--no-zygote",
+      //   ],
+      //   ignoreHTTPSErrors: true,
+      // });
 
       // Process URLs in batches
       const batchSize = sanitizedConfig.maxConcurrency;
