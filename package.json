@@ -1,6 +1,7 @@
 {
   "name": "email-scraper-server",
   "version": "1.0.0",
+  "type": "module",
   "description": "Web scraper service to extract emails from websites",
   "main": "index.js",
   "scripts": {

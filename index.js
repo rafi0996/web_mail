@@ -6,6 +6,8 @@ import { URL } from "url";
 import robotsParser from "robots-parser";
 import path from "path";
 import fetch from "node-fetch";
+import fs from "fs";
+
 
 const app = express();
 const PORT = 5000;
@@ -31,7 +33,7 @@ async function startBrowser() {
   // Find first existing Chrome executable
   let executablePath = null;
   for (const path of possibleChromePaths) {
-    if (path && require('fs').existsSync(path)) {
+    if (path && fs.existsSync(path)) {
       executablePath = path;
       console.log(`Found Chrome at: ${executablePath}`);
       break;
