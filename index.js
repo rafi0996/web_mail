@@ -1,14 +1,15 @@
 // email-scraper-server.js
-const express = require("express");
-// Replaced
-const puppeteer = require("puppeteer-core");
-const cors = require("cors");
-const { URL } = require("url");
-const robotsParser = require("robots-parser");
-const path = require("path");
-const fetch = require("node-fetch");
+import express from "express";
+import puppeteer from "puppeteer-core";
+import cors from "cors";
+import { URL } from "url";
+import robotsParser from "robots-parser";
+import path from "path";
+import fetch from "node-fetch";
+
 const app = express();
 const PORT = 5000;
+
 
 // API Configuration
 const API_BASE_URL = ""; // Empty string for same-origin, or specify full URL if needed
